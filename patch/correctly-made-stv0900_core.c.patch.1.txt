@@ -1,0 +1,140 @@
+--- stv0900_core.c.orig	2011-11-14 11:55:19.000000000 -0800
++++ stv0900_core.c.patched	2012-01-22 22:36:15.000000000 -0800
+@@ -374,7 +374,7 @@
+ 					enum fe_stv0900_clock_type path2_ts)
+ {
+ 
+-	dprintk("%s\n", __func__);
++	dprintk("%s path1 %d path2 %d\n", __func__, path1_ts, path2_ts);
+ 
+ 	if (intp->chip_id >= 0x20) {
+ 		switch (path1_ts) {
+@@ -384,6 +384,8 @@
+ 			case STV0900_SERIAL_PUNCT_CLOCK:
+ 			case STV0900_SERIAL_CONT_CLOCK:
+ 			default:
++				stv0900_write_bits(intp,
++						F0900_P1_TSFIFO_MANSPEED, 0);
+ 				stv0900_write_reg(intp, R0900_TSGENERAL,
+ 							0x00);
+ 				break;
+@@ -414,6 +416,8 @@
+ 				break;
+ 			case STV0900_PARALLEL_PUNCT_CLOCK:
+ 			case STV0900_DVBCI_CLOCK:
++				stv0900_write_bits(intp,
++						F0900_P2_TSFIFO_MANSPEED, 0);
+ 				stv0900_write_reg(intp,
+ 						R0900_TSGENERAL, 0x0A);
+ 				dprintk("%s: 0x0a\n", __func__);
+@@ -429,6 +433,8 @@
+ 			case STV0900_SERIAL_PUNCT_CLOCK:
+ 			case STV0900_SERIAL_CONT_CLOCK:
+ 			default:
++				stv0900_write_bits(intp,
++						F0900_P1_TSFIFO_MANSPEED, 0);
+ 				stv0900_write_reg(intp, R0900_TSGENERAL1X,
+ 							0x10);
+ 				break;
+@@ -460,6 +466,8 @@
+ 				break;
+ 			case STV0900_PARALLEL_PUNCT_CLOCK:
+ 			case STV0900_DVBCI_CLOCK:
++				stv0900_write_bits(intp,
++						F0900_P2_TSFIFO_MANSPEED, 0);
+ 				stv0900_write_reg(intp, R0900_TSGENERAL1X,
+ 							0x12);
+ 				dprintk("%s: 0x12\n", __func__);
+@@ -1587,6 +1595,53 @@
+ 
+ 	enum fe_stv0900_error error = STV0900_NO_ERROR;
+ 
++	int fe_stv0900_tracking_standard_return[] = {
++		SYS_DVBS,
++		SYS_DVBS2,
++		SYS_DSS,
++		SYS_DVBS2
++	};
++
++	int fe_stv0900_modulation_return[] = {
++		QPSK,
++		PSK_8,
++		APSK_16,
++		APSK_32
++	};
++
++	int fe_stv0900_modcode_return[] = {
++		FEC_NONE,
++		FEC_AUTO,
++		FEC_AUTO,
++		FEC_AUTO,
++		FEC_1_2,
++		FEC_3_5,
++		FEC_2_3,
++		FEC_3_4,
++		FEC_4_5,
++		FEC_5_6,
++		FEC_8_9,
++		FEC_9_10,
++		FEC_3_5,
++		FEC_2_3,
++		FEC_3_4,
++		FEC_5_6,
++		FEC_8_9,
++		FEC_9_10,
++		FEC_2_3,
++		FEC_3_4,
++		FEC_4_5,
++		FEC_5_6,
++		FEC_8_9,
++		FEC_9_10,
++		FEC_3_4,
++		FEC_4_5,
++		FEC_5_6,
++		FEC_8_9,
++		FEC_9_10,
++		FEC_AUTO
++	};
++
+ 	dprintk("%s: ", __func__);
+ 
+ 	if (!(INRANGE(100000, c->symbol_rate, 70000000)))
+@@ -1603,10 +1658,17 @@
+ 	p_search.fec = STV0900_FEC_UNKNOWN;
+ 	p_search.standard = STV0900_AUTO_SEARCH;
+ 	p_search.iq_inversion = STV0900_IQ_AUTO;
+-	p_search.search_algo = STV0900_BLIND_SEARCH;
+-	/* Speeds up DVB-S searching */
++/*	p_search.search_algo = STV0900_BLIND_SEARCH;	*/
++
++	// UDL
++	if (c->fec_inner == 9)
++		p_search.search_algo = STV0900_BLIND_SEARCH;
++	else
++		p_search.search_algo = STV0900_WARM_START;
++	// end UDL
++	/* Speeds up DVB-S searching
+ 	if (c->delivery_system == SYS_DVBS)
+-		p_search.standard = STV0900_SEARCH_DVBS1;
++		p_search.standard = STV0900_SEARCH_DVBS1; */
+ 		
+ 	intp->srch_standard[demod] = p_search.standard;
+ 	intp->symbol_rate[demod] = p_search.symbol_rate;
+@@ -1632,6 +1694,17 @@
+ 		p_result.spectrum = intp->result[demod].spectrum;
+ 		p_result.rolloff = intp->result[demod].rolloff;
+ 		p_result.modulation = intp->result[demod].modulation;
++
++		// UDL
++		c->frequency		= p_result.frequency;
++		c->symbol_rate		= p_result.symbol_rate;
++		c->fec_inner		= fe_stv0900_modcode_return[p_result.fec];
++		c->pilot			= p_result.pilot;
++		c->rolloff			= p_result.rolloff;
++		c->modulation		= fe_stv0900_modulation_return[p_result.modulation];
++		c->inversion		= p_result.spectrum;
++		c->delivery_system	= fe_stv0900_tracking_standard_return[p_result.standard];
++		dprintk("TEST fec: %d %d \n", p_result.fec, c->fec_inner);
+ 	} else {
+ 		p_result.locked = FALSE;
+ 		switch (intp->err[demod]) {
