@@ -4,6 +4,11 @@ This files patch the stv0900_core.c
 
 ```
 Substitute the file. The file is already patched
-The original author file is in the patch directory: correctly-made-stv0900_core.c.patch.1.txt
-My used patch file is also in the patch directory
+
+My patch file is also in the patch directory
+
+If you want to patch a file just go to the patch folder and copy the patch file to:
+/linux/drivers/media/dvb-frontends
+patch < stv0900_core.c.patch
+It will replace the original file with the patches
 ```
