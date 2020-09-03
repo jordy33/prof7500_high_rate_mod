@@ -111,7 +111,7 @@ Move kernel7.img and modules.tar.gz from the cloud machine to the raspberry in t
 
 Copy the kernel to the raspberry pi
 ```
-cd /kernel
+cd ~/kernel
 sudo cp ./kernel.img /boot/kernel7.img
 ```
 Decompress the kernel modules in the raspberry pi
