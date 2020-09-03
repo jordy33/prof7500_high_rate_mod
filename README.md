@@ -49,7 +49,7 @@ export PATH=tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/:$
 Tool chain check.
 ```
 cd linux
-ls arm*
+arm- and press tab twice
 ```
 you should see arm-linux libraries
 
