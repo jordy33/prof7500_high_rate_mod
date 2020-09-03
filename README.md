@@ -32,11 +32,12 @@ sudo apt-get install lib32z1 lib32ncurses5 lib32stdc++6 lib32z1 lib32z1-dev
 
 Fetch latest Kernel of Raspbian from git.
 ```
+cd ~
 git clone https://github.com/raspberrypi/linux
 ```
 Apply patch
 ```
-cd /linux/drivers/media/dvb-frontends
+cd ~/linux/drivers/media/dvb-frontends
 patch < stv0900_core.c.patch
 ```
 
@@ -69,6 +70,7 @@ nproc
 ```
 
 which gives you number of processors it support and we will be using it coming stages.
+Replace -j4 matching your processors in your cloud computer.
 
 Compile.
 zImage:
